@@ -1,0 +1,95 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mx-auto px-4 py-6 space-y-6">
+  <h2 class="text-2xl font-bold">📊 Usage Analytics</h2>
+
+  <!-- Filter -->
+  <form method="GET" action="{{ url_for('analytics') }}" class="flex items-center gap-2">
+    <label for="product" class="font-medium">Product:</label>
+    <select id="product" name="product" onchange="this.form.submit()"
+            class="border rounded px-3 py-1">
+      <option value="All" {% if selected=='All' %}selected{% endif %}>All Products</option>
+      {% for p in product_list %}
+        <option value="{{ p }}" {% if p==selected %}selected{% endif %}>{{ p }}</option>
+      {% endfor %}
+    </select>
+  </form>
+
+  <!-- Bar chart -->
+  <div class="bg-white shadow rounded-lg p-4">
+    <h3 class="font-semibold mb-2">Top 10 Most Requested</h3>
+    <div class="relative" style="height:150px">
+      <canvas id="barChart"></canvas>
+    </div>
+  </div>
+
+  <!-- Line chart -->
+  <div class="bg-white shadow rounded-lg p-4">
+    <h3 class="font-semibold mb-2">
+      {% if selected=='All' %}
+        Daily Approved Quantity
+      {% else %}
+        {{ selected }} Stock Level
+      {% endif %}
+    </h3>
+    <div class="relative" style="height:150px">
+      <canvas id="lineChart"></canvas>
+    </div>
+  </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  // Bar
+  new Chart(document.getElementById('barChart').getContext('2d'), {
+    type: 'bar',
+    data: {
+      labels: {{ top_requested|map(attribute='product_name')|list|tojson }},
+      datasets: [{
+        label: 'Total Requested',
+        data: {{ top_requested|map(attribute='total_requested')|list|tojson }},
+        backgroundColor: 'rgba(59,130,246,0.6)',
+        borderColor:     'rgba(59,130,246,1)',
+        borderWidth: 1
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      scales: {
+        x: { ticks: { autoSkip: true, maxRotation: 0 } },
+        y: { beginAtZero: true, ticks: { stepSize: 10 } }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+
+  // Line
+  new Chart(document.getElementById('lineChart').getContext('2d'), {
+    type: 'line',
+    data: {
+      labels: {{ usage_trend|map(attribute='day')|list|tojson }},
+      datasets: [{
+        label: {% if selected=='All' %}'Units Approved'{% else %}'Stock Level'{% endif %},
+        data:  {{ usage_trend|map(attribute='level')|list|tojson }},
+        fill: false,
+        borderColor: 'rgba(16,185,129,0.8)',
+        tension: 0.3,
+      }]
+    },
+    options: {
+      maintainAspectRatio: false,
+      scales: {
+        x: {
+          type: 'category',
+          ticks: { autoSkip: true, maxRotation: 0 }
+        },
+        y: {
+          beginAtZero: false,
+          ticks: { stepSize: 4 }
+        }
+      },
+      plugins: { legend: { display: false } }
+    }
+  });
+</script>
+{% endblock %}

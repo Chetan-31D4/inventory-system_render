@@ -1,0 +1,98 @@
+{% extends 'base.html' %}
+{% block content %}
+  <div class="container mx-auto p-6 max-w-2xl bg-white rounded shadow">
+    <h2 class="text-xl font-bold mb-4">Discussion for Request #{{ req.id }}</h2>
+
+    <!-- Original request details -->
+    <div class="mb-4 text-sm text-gray-700">
+      <p><strong>Product:</strong> {{ req.product_name }} &times;{{ req.quantity }}</p>
+      <p><strong>Status:</strong>
+        {% if req.status=='pending' %}
+          <span class="px-2 py-1 bg-yellow-100 text-yellow-800 rounded">Pending</span>
+        {% elif req.status=='approved' %}
+          <span class="px-2 py-1 bg-green-100 text-green-800 rounded">Approved</span>
+        {% else %}
+          <span class="px-2 py-1 bg-red-100 text-red-800 rounded">Rejected</span>
+        {% endif %}
+      </p>
+    </div>
+
+    <!-- Comments list -->
+    <div class="space-y-4 mb-6">
+      {% for c in comments %}
+        <div class="p-4 bg-gray-50 rounded-lg">
+          <div class="flex justify-between items-center text-xs text-gray-500 mb-2">
+            <span>{{ c.commenter }}</span>
+            <span>{{ c.commented_at }}</span>
+          </div>
+          <div class="text-sm text-gray-800 mb-2">
+            {{ c.comment_text }}
+          </div>
+
+          {% if attachments[c.id] %}
+            <div class="flex flex-wrap gap-3">
+              {% for a in attachments[c.id] %}
+                <a
+                  href="{{ url_for('download_r2_object', key=a.stored_path) }}"
+                  target="_blank"
+                  class="…"
+                >
+                  📎 {{ a.filename }}
+                </a>
+              {% endfor %}
+            </div>
+          {% endif %}
+        </div>
+      {% else %}
+        <p class="text-gray-500 italic">No comments yet.</p>
+      {% endfor %}
+    </div>
+
+    <!-- Add new comment + file upload -->
+    <form
+      method="POST"
+      enctype="multipart/form-data"
+      class="space-y-4"
+    >
+      <div>
+        <label for="comment" class="block text-sm font-medium text-gray-700">Your Comment</label>
+        <textarea
+          id="comment"
+          name="comment"
+          rows="3"
+          placeholder="Write your comment…"
+          class="w-full border border-gray-300 rounded p-2 focus:ring-indigo-500 focus:border-indigo-500"
+          required
+        ></textarea>
+      </div>
+
+      <div>
+        <label for="files" class="block text-sm font-medium text-gray-700">Attach Files</label>
+        <input
+          type="file"
+          id="files"
+          name="files"
+          multiple
+          class="mt-1 block w-full text-sm text-gray-600"
+        />
+        <p class="text-xs text-gray-500 mt-1">Allowed: png, jpg, jpeg, pdf, docx</p>
+      </div>
+
+      <div class="flex justify-end">
+        <button
+          type="submit"
+          class="bg-indigo-600 hover:bg-indigo-700 text-white px-4 py-2 rounded shadow-sm"
+        >
+          Post Comment
+        </button>
+      </div>
+    </form>
+
+    <div class="mt-6">
+      <a href="{{ url_for('viewer_history') }}"
+         class="text-gray-600 hover:underline text-sm">
+        ← Back to History
+      </a>
+    </div>
+  </div>
+{% endblock %}

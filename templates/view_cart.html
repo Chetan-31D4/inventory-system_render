@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>My Cart</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+</head>
+<body class="p-6 bg-gray-50 font-sans">
+
+  <h1 class="text-2xl font-bold mb-4">My Cart</h1>
+
+  {% if cart %}
+    <!-- TABLE of items with individual Remove-forms -->
+    <table class="table-auto w-full border-collapse border border-gray-300 mb-6">
+      <thead>
+        <tr class="bg-gray-200">
+          <th class="border border-gray-300 px-4 py-2">Product</th>
+          <th class="border border-gray-300 px-4 py-2">Quantity</th>
+          <th class="border border-gray-300 px-4 py-2">Reason</th>
+          <th class="border border-gray-300 px-4 py-2">Sub Reason</th>
+          <th class="border border-gray-300 px-4 py-2">Drone No.</th>
+          <th class="border border-gray-300 px-4 py-2 text-center">Remove</th>
+        </tr>
+      </thead>
+      <tbody>
+        {% for item in cart %}
+          <tr class="border-b">
+            <td class="border border-gray-300 px-4 py-2">{{ item.product_name }}</td>
+            <td class="border border-gray-300 px-4 py-2">{{ item.quantity }}</td>
+            <td class="border border-gray-300 px-4 py-2">{{ item.reason }}</td>
+            <td class="border border-gray-300 px-4 py-2">{{ item.sub_reason }}</td>
+            <td class="border border-gray-300 px-4 py-2">{{ item.drone_number }}</td>
+            <td class="border border-gray-300 px-4 py-2 text-center">
+              <form
+                method="POST"
+                action="{{ url_for('remove_from_cart', product_id=item.product_id) }}"
+              >
+                <button
+                  type="submit"
+                  class="text-red-600 hover:underline text-sm"
+                  onclick="return confirm('Remove this item from cart?')"
+                >
+                  Remove
+                </button>
+              </form>
+            </td>
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+
+    <!-- SEPARATE form just for submit_cart + attachments -->
+    <form
+      method="POST"
+      action="{{ url_for('submit_cart') }}"
+      enctype="multipart/form-data"
+      class="space-y-4"
+    >
+      <div>
+        <label class="block text-sm font-medium text-gray-700 mb-1">
+          Attach files (images, PDFs…)
+        </label>
+        <input
+          type="file"
+          name="attachments"
+          multiple
+          class="border rounded p-1 w-full text-sm"
+        />
+      </div>
+      <button
+        type="submit"
+        onclick="return confirm('Are you sure you want to submit all requests?')"
+        class="bg-blue-500 hover:bg-blue-700 text-white font-bold py-2 px-4 rounded"
+      >
+        Submit All Requests
+      </button>
+    </form>
+
+  {% else %}
+    <p class="text-gray-500 italic">Your cart is empty.</p>
+  {% endif %}
+
+  <a href="{{ url_for('dashboard') }}"
+     class="inline-block mt-6 text-blue-600 hover:underline">
+    ← Back to Dashboard
+  </a>
+</body>
+</html>

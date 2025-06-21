@@ -1,0 +1,129 @@
+{% extends 'base.html' %}
+{% block content %}
+
+  <h2 class="text-2xl font-bold mb-4">🔨 Job Assignments</h2>
+
+  {# — Admin only: creation form + filters — #}
+  {% if session.role == 'admin' %}
+    <form method="POST" class="mb-6 space-y-4 p-4 bg-white rounded shadow">
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium">Title</label>
+          <input name="title" class="mt-1 w-full border rounded px-2 py-1" required>
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Assign To</label>
+          <select name="assigned_to" class="mt-1 w-full border rounded px-2 py-1" required>
+            {% for v in viewers %}
+              <option value="{{ v }}" {% if v==assignee %}selected{% endif %}>{{ v }}</option>
+            {% endfor %}
+          </select>
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Due Date</label>
+          <input type="date" name="due_date" class="mt-1 w-full border rounded px-2 py-1" value="">
+        </div>
+        <div>
+          <label class="block text-sm font-medium">Priority</label>
+          <select name="priority" class="mt-1 w-full border rounded px-2 py-1" required>
+            <option value="Low">Low</option>
+            <option value="Normal">Normal</option>
+            <option value="High">High</option>
+          </select>
+        </div>
+        <div class="col-span-2">
+          <label class="block text-sm font-medium">Description</label>
+          <textarea name="description" rows="3"
+                    class="mt-1 w-full border rounded px-2 py-1"></textarea>
+        </div>
+      </div>
+      <button type="submit"
+              class="bg-blue-600 text-white px-4 py-2 rounded hover:bg-blue-700">
+        Create Job
+      </button>
+    </form>
+
+    {# — Admin only: filters — #}
+    <div class="flex items-center mb-4 space-x-2">
+      <input id="q" type="text" placeholder="Search…" value="{{ search }}"
+             class="border rounded px-3 py-1 text-sm">
+      <select id="status" class="border rounded px-3 py-1 text-sm">
+        <option {{ 'selected' if status_f=='All' }}>All</option>
+        <option value="pending"   {{ 'selected' if status_f=='pending' }}>Pending</option>
+        <option value="completed" {{ 'selected' if status_f=='completed' }}>Completed</option>
+      </select>
+      <select id="assigned_to" class="border rounded px-3 py-1 text-sm">
+        <option {{ 'selected' if assignee=='All' }}>All</option>
+        {% for v in viewers %}
+          <option value="{{ v }}" {{ 'selected' if v==assignee }}>{{ v }}</option>
+        {% endfor %}
+      </select>
+      <button id="filterBtn"
+              class="bg-gray-600 text-white px-3 py-1 rounded hover:bg-gray-700 text-sm">
+        Apply
+      </button>
+    </div>
+  {% endif %}
+
+  {# — Shared: job list — #}
+  <div class="overflow-x-auto bg-white rounded shadow">
+    <table class="min-w-full table-auto">
+      <thead class="bg-gray-100">
+        <tr>
+          <th class="px-3 py-2 text-left">Title</th>
+          <th class="px-3 py-2 text-left">Due</th>
+          <th class="px-3 py-2 text-left">Priority</th>
+          <th class="px-3 py-2 text-left">Assigned To</th>
+          <th class="px-3 py-2 text-left">Status</th>
+          {% if session.role == 'viewer' %}
+            <th class="px-3 py-2">Action</th>
+          {% endif %}
+        </tr>
+      </thead>
+      <tbody>
+        {% for job in jobs %}
+          <tr class="border-b even:bg-gray-50">
+            <td class="px-3 py-2">{{ job.title }}</td>
+            <td class="px-3 py-2">{{ job.due_date or '—' }}</td>
+            <td class="px-3 py-2">{{ job.priority }}</td>
+            <td class="px-3 py-2">{{ job.assigned_to }}</td>
+            <td class="px-3 py-2">
+              {% if job.status=='completed' %}
+                <span class="text-green-600 font-medium">✓ Completed</span>
+              {% else %}
+                <span class="text-yellow-600 font-medium">● {{ job.status.capitalize() }}</span>
+              {% endif %}
+            </td>
+            {% if session.role == 'viewer' %}
+              <td class="px-3 py-2 text-center">
+                {% if job.status!='completed' %}
+                  <form method="POST"
+                        action="{{ url_for('complete_job', job_id=job.id) }}">
+                    <button type="submit"
+                            class="bg-green-500 text-white px-2 py-1 rounded text-sm">
+                      Mark Done
+                    </button>
+                  </form>
+                {% else %}
+                  —
+                {% endif %}
+              </td>
+            {% endif %}
+          </tr>
+        {% endfor %}
+      </tbody>
+    </table>
+  </div>
+
+  {% if session.role == 'admin' %}
+  <script>
+    document.getElementById('filterBtn').onclick = () => {
+      const q  = document.getElementById('q').value;
+      const s  = document.getElementById('status').value;
+      const a  = document.getElementById('assigned_to').value;
+      window.location.search = ?q=${encodeURIComponent(q)}&status=${s}&assigned_to=${a};
+    };
+  </script>
+  {% endif %}
+
+{% endblock %}

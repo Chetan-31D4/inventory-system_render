@@ -1,0 +1,51 @@
+{% extends 'base.html' %}
+{% block content %}
+<div class="container mx-auto p-6 bg-white rounded shadow max-w-4xl" x-data="{ lightbox: false, imgSrc: '' }">
+  <h2 class="text-xl font-bold mb-4">Attachments for Request #{{ req.id }}</h2>
+
+  {% if files %}
+  <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-4">
+    {% for f in files %}
+      <div class="border rounded overflow-hidden shadow-sm">
+        <img 
+          src="{{ f.url }}"
+          alt="{{ f.filename }}"
+          class="w-full object-contain h-48 cursor-pointer"
+          @click="imgSrc='{{ url_for('download_r2_object', key=f.stored_path) }}'; lightbox = true"
+        />
+        <div class="p-2 text-sm">
+          <strong>{{ f.filename }}</strong><br/>
+          <span class="text-gray-500 text-xs">by {{ f.uploaded_by }} on {{ f.uploaded_at }}</span>
+        </div>
+      </div>
+    {% endfor %}
+  </div>
+  {% else %}
+    <p class="italic text-gray-500">No attachments to display.</p>
+  {% endif %}
+
+  <!-- Lightbox Overlay -->
+  <div 
+       class="fixed inset-0 bg-black bg-opacity-75 flex items-center justify-center z-50"
+       x-show="lightbox"
+       x-transition.opacity
+       @click.self="lightbox = false"
+  >
+    <img 
+      :src="imgSrc" 
+      class="max-w-full max-h-full rounded-lg shadow-lg"
+    />
+    <button 
+      class="absolute top-4 right-4 text-white text-2xl" 
+      @click="lightbox = false"
+    >&times;</button>
+  </div>
+
+  <div class="mt-6">
+    <a href="{{ url_for('viewer_history') }}"
+       class="text-blue-600 hover:underline text-sm">
+      ← Back to Request History
+    </a>
+  </div>
+</div>
+{% endblock %}
